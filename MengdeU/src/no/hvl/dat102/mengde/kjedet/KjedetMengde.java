@@ -3,239 +3,246 @@ package no.hvl.dat102.mengde.kjedet;
 //********************************************************************
 // Kjedet implementasjon av en mengde. 
 //********************************************************************
-import java.util.Iterator;
-import java.util.Random;
 
 import no.hvl.dat102.exception.EmptyCollectionException;
 import no.hvl.dat102.mengde.adt.MengdeADT;
 
+import java.util.Iterator;
+import java.util.Random;
+
 public class KjedetMengde<T> implements MengdeADT<T> {
-	private static Random rand = new Random();
-	private int antall; // antall elementer i mengden
-	private LinearNode<T> start;
+    private static final Random rand = new Random();
+    private int antall; // antall elementer i mengden
+    private LinearNode<T> start;
 
-	/**
-	 * Oppretter en tom mengde.
-	 */
-	public KjedetMengde() {
-		antall = 0;
-		start = null;
-	}//
+    /**
+     * Oppretter en tom mengde.
+     */
+    public KjedetMengde() {
+        antall = 0;
+        start = null;
+    }//
 
-	@Override
-	public void leggTil(T element) {
-		if (!(inneholder(element))) {
-			LinearNode<T> node = new LinearNode<T>(element);
-			node.setNeste(start);
-			start = node;
-			antall++;
-		}
-	}
+    @Override
+    public void leggTil(T element) {
+        if (!(inneholder(element))) {
+            LinearNode<T> node = new LinearNode<T>(element);
+            node.setNeste(start);
+            start = node;
+            antall++;
+        }
+    }
 
-	@Override
-	public void leggTilAlle(MengdeADT<T> m2) {
-		Iterator<T> teller = m2.oppramser();
-		while (teller.hasNext()) {
-			leggTil(teller.next());
-		}
-	}
+    @Override
+    public void leggTilAlle(MengdeADT<T> m2) {
+        Iterator<T> teller = m2.oppramser();
+        while (teller.hasNext()) {
+            leggTil(teller.next());
+        }
+    }
 
-	@Override
-	public T fjernTilfeldig() {
-		if (erTom())
-			throw new EmptyCollectionException("mengde");
+    @Override
+    public T fjernTilfeldig() {
+        if (erTom())
+            throw new EmptyCollectionException("mengde");
 
-		LinearNode<T> forgjenger, aktuell;
-		T resultat = null;
+        LinearNode<T> forgjenger, aktuell;
+        T resultat = null;
 
-		int valg = rand.nextInt(antall) + 1;
-		if (valg == 1) {
-			resultat = start.getElement();
-			start = start.getNeste();
-		} else {
-			forgjenger = start;
-			for (int nr = 2; nr < valg; nr++) {
-				forgjenger = forgjenger.getNeste();
-			}
-			aktuell = forgjenger.getNeste();
-			resultat = aktuell.getElement();
-			forgjenger.setNeste(aktuell.getNeste());
-		}
-		antall--;
+        int valg = rand.nextInt(antall) + 1;
+        if (valg == 1) {
+            resultat = start.getElement();
+            start = start.getNeste();
+        } else {
+            forgjenger = start;
+            for (int nr = 2; nr < valg; nr++) {
+                forgjenger = forgjenger.getNeste();
+            }
+            aktuell = forgjenger.getNeste();
+            resultat = aktuell.getElement();
+            forgjenger.setNeste(aktuell.getNeste());
+        }
+        antall--;
 
-		return resultat;
+        return resultat;
 
-	}//
+    }//
 
-	@Override
-	public T fjern(T element) {
+    @Override
+    public T fjern(T element) {
 
-		if (erTom())
-			throw new EmptyCollectionException("mengde");
+        if (erTom())
+            throw new EmptyCollectionException("mengde");
 
-		boolean funnet = false;
-		LinearNode<T> forgjenger, aktuell;
-		T resultat = null;
-		if (start.getElement().equals(element)) {// Sletter foran
-			resultat = start.getElement();
-			start = start.getNeste();
-			antall--;
-		} else {// Gjennomgår den kjedete strukturen
-			forgjenger = start;
-			aktuell = start.getNeste();
-			for (int sok = 2; sok <= antall && !funnet; sok++) {
-				if (aktuell.getElement().equals(element))
-					funnet = true;
-				else {
-					forgjenger = aktuell.getNeste();
-				}
-			}
-			if (funnet) {
-				resultat = aktuell.getElement();
-				forgjenger.setNeste(aktuell.getNeste()); // Slette midt inni/bak
-				antall--;
-			}
-		}
-		return resultat;
+        boolean funnet = false;
+        LinearNode<T> forgjenger, aktuell;
+        T resultat = null;
+        aktuell = start;
 
-	}//
 
-	@Override
-	public boolean inneholder(T element) {
-		boolean funnet = false;
-		LinearNode<T> aktuell = start;
-		for (int soek = 0; soek < antall && !funnet; soek++) {
-			if (aktuell.getElement().equals(element)) {
-				funnet = true;
-			} else {
-				aktuell = aktuell.getNeste();
-			}
-		}
-		return funnet;
-	}
-	/*
-	 * Når vi overkjører (ovverride) equals- meteoden er det anbefalt at vi også
-	 * overkjører hashcode-metoden da en del biblioteker bruker hascode sammen med
-	 * equals. Vi kommer tilbake til forklaring og bruk av hashcode senere i faget.
-	 */
+//		hvis første element skal slettes
+        if (start.getElement().equals(element)) {
+            resultat = (T) aktuell;
+            start = aktuell.getNeste();
+            antall--;
+            return resultat;
+        }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + antall;
-		result = prime * result + ((start == null) ? 0 : start.hashCode());
-		return result;
-	}
+        forgjenger = aktuell;
+        aktuell = aktuell.getNeste();
 
-	@Override
-	public boolean equals(Object ny) {
-		// TODO
-		if (this == ny) {
-			return true;
-		}
-		if (ny == null) {
-			return false;
-		}
-		if (getClass() != ny.getClass()) {
-			return false;
-		} 
-			boolean likeMengder = true;
-			MengdeADT<T> m2 = (KjedetMengde<T>) ny;
-			if (this.antall != m2.antall()) {
-				likeMengder = false;
-			} else {
-				likeMengder = true;
-				Iterator<T> teller = m2.oppramser();
-				while (teller.hasNext() && likeMengder) {
-					T element = teller.next();
-					if (!this.inneholder(element)) {
-						likeMengder = false;
-					}
-				}
-				return likeMengder;
-			}
-		
-		return false;
-	}
 
-	@Override
-	public boolean erTom() {
-		return antall == 0;
-	}
+        while (aktuell.getNeste() != null) {
 
-	@Override
-	public int antall() {
-		return antall;
-	}
+            if (aktuell.getElement().equals(element)) {
+                resultat = (T) aktuell;
+                forgjenger.setNeste(aktuell.getNeste());
+                antall--;
+                return resultat;
+            }
 
-	@Override
-	public MengdeADT<T> union(MengdeADT<T> m2) {
-		// TODO
-		MengdeADT<T> begge = new KjedetMengde<T>();
-		LinearNode<T> aktuell = start;
-		T element = null;
+            aktuell = aktuell.getNeste();
+        }
 
-		while (aktuell != null) {// ubetinget innsetting
-			((KjedetMengde<T>) begge).settInn(aktuell.getElement());
-			aktuell = aktuell.getNeste();
-		}
 
-		Iterator<T> teller = m2.oppramser();
-		while (teller.hasNext()) {
-			element = teller.next();
-			if (!this.inneholder(element)) {// tester mot "konstant" mengde
-				((KjedetMengde<T>) begge).settInn(element);
-			}
-		}
+        return resultat;
+    }//
 
-		return begge;
-	}//
+    @Override
+    public boolean inneholder(T element) {
+        boolean funnet = false;
+        LinearNode<T> aktuell = start;
+        for (int soek = 0; soek < antall && !funnet; soek++) {
+            if (aktuell.getElement().equals(element)) {
+                funnet = true;
+            } else {
+                aktuell = aktuell.getNeste();
+            }
+        }
+        return funnet;
+    }
 
-	@Override
-	public MengdeADT<T> snitt(MengdeADT<T> m2) {
-		// TODO
-		MengdeADT<T> snittM = new KjedetMengde<T>();
-		T element;
-		/*
-		 * ..
-		 * 
-		 * if (this.inneholder(element)) ((KjedetMengde<T>) snittM).settInn(element);
-		 */
-		return snittM;
-	}
+    @Override
+    public boolean equals(Object ny) {
+        if (this == ny) {
+            return true;
+        }
+        if (ny == null) {
+            return false;
+        }
+        if (getClass() != ny.getClass()) {
+            return false;
+        } else {
+            boolean likeMengder = true;
+            MengdeADT<T> m2 = (KjedetMengde<T>) ny;
+            if (this.antall != m2.antall()) {
+                likeMengder = false;
+            } else {
+                likeMengder = true;
+                // ...
+                return likeMengder;
+            }
+        }
+        return false;
 
-	@Override
-	public MengdeADT<T> differens(MengdeADT<T> m2) {
-		// TODO
-		MengdeADT<T> differensM = new KjedetMengde<T>();
-		T element;
-		/*
-		 * Fyll ut
-		 * 
-		 */
+    }
 
-		return differensM;
-	}
+    @Override
+    public boolean erTom() {
+        return antall == 0;
+    }
 
-	@Override
-	public boolean undermengde(MengdeADT<T> m2) {
-		// TODO
-		boolean erUnderMengde = true;
-		// ...
-		return erUnderMengde;
-	}
+    @Override
+    public int antall() {
+        return antall;
+    }
 
-	@Override
-	public Iterator<T> oppramser() {
-		return new KjedetIterator<T>(start);
-	}
+    @Override
+    public MengdeADT<T> union(MengdeADT<T> m2) {
+        MengdeADT<T> begge = new KjedetMengde<T>();
+        LinearNode<T> aktuell = start;
+        T element = null;
 
-	private void settInn(T element) {
-		LinearNode<T> nyNode = new LinearNode<T>(element);
-		nyNode.setNeste(start);
-		start = nyNode;
-		antall++;
-	}
+//		Så lengde aktuell node ikke peker til null
+//		sett inn element fra aktuell node til begge
+//		gå videre med aktuell node
+        while (aktuell != null) {
+            ((KjedetMengde<T>) begge).settInn(aktuell.getElement());
+            aktuell = aktuell.getNeste();
+        }
+
+
+        Iterator<T> teller = m2.oppramser();
+        while (teller.hasNext()) {
+            element = teller.next();
+            if (!this.inneholder(element)) {
+                ((KjedetMengde<T>) begge).settInn(element);
+            }
+        }
+
+
+        return begge;
+    }//
+
+    @Override
+    public MengdeADT<T> snitt(MengdeADT<T> m2) {
+        MengdeADT<T> snittM = new KjedetMengde<T>();
+        T element;
+        /*
+         * Fyll ut..
+         *
+         * if (this.inneholder(element)) ((KjedetMengde<T>) snittM).settInn(element);
+         */
+        Iterator<T> teller = m2.oppramser();
+
+        while (teller.hasNext()) {
+            element = teller.next();
+            if (this.inneholder(element)) {
+                ((KjedetMengde<T>) snittM).settInn(element);
+            }
+        }
+
+        return snittM;
+    }
+
+    @Override
+    public MengdeADT<T> differens(MengdeADT<T> m2) {
+        MengdeADT<T> differensM = new KjedetMengde<T>();
+        T element;
+        /*
+         * Fyll ut
+         *
+         */
+        Iterator<T> teller = m2.oppramser();
+
+        while (teller.hasNext()) {
+            element = teller.next();
+
+            if (!this.inneholder(element)) {
+                ((KjedetMengde<T>) differensM).settInn(element);
+            }
+        }
+
+        return differensM;
+    }
+
+    @Override
+    public boolean undermengde(MengdeADT<T> m2) {
+        boolean erUnderMengde = true;
+        // Fyll ut
+        return erUnderMengde;
+    }
+
+    @Override
+    public Iterator<T> oppramser() {
+        return new KjedetIterator<T>(start);
+    }
+
+    private void settInn(T element) {
+        LinearNode<T> nyNode = new LinearNode<T>(element);
+        nyNode.setNeste(start);
+        start = nyNode;
+        antall++;
+    }
 
 }// class
